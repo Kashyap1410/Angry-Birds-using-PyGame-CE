@@ -1,5 +1,7 @@
 import pygame
 import assets
+import math
+import random
 
 class Bird:
     def __init__(self, bird_type, player):
@@ -57,3 +59,37 @@ class Block:
         if self.health <= 0:
             self.health = 0
         self.update_image()
+
+class Alien:
+    def __init__(self, start_x, base_y):
+        self.start_x = start_x
+        self.x = start_x
+        self.base_y = base_y
+        self.phase = random.uniform(0, 2*math.pi)
+        self.image = assets.alien
+        self.rect = self.image.get_rect(center=(self.x, self.base_y))
+        self.active = True
+        self.respawn_timer = 0
+        self.respawn_delay = 180
+
+    def update(self):
+        if self.active:
+            self.x += 2
+            self.phase += (2*math.pi) / 100
+            self.y = self.base_y + 20*math.sin(self.phase)
+            self.rect.center = (self.x, self.y)
+            if self.x > 900 + self.image.get_width()/2:
+                self.x = -self.image.get_width()/2
+        else:
+            self.respawn_timer -= 1
+            if self.respawn_timer <= 0:
+                self.active = True
+                self.x = self.start_x
+                self.phase = random.uniform(0, 2*math.pi)
+
+    def draw(self):
+        assets.screen.blit(self.image, self.rect.topleft)
+
+    def hit(self):
+        self.active = False
+        self.respawn_timer = self.respawn_delay

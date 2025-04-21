@@ -1,45 +1,10 @@
 import pygame
-import random
+pygame.init()
+pygame.display.set_caption("FeatherFall: Siege of Avaria!")
+
 import math
 import assets, tools
 import classes
-
-pygame.init()
-pygame.display.set_caption("Angry Birds- Space Mode")
-
-class Alien:
-    def __init__(self, start_x, base_y):
-        self.start_x = start_x
-        self.x = start_x
-        self.base_y = base_y
-        self.phase = random.uniform(0, 2*math.pi)
-        self.image = assets.alien
-        self.rect = self.image.get_rect(center=(self.x, self.base_y))
-        self.active = True
-        self.respawn_timer = 0
-        self.respawn_delay = 180
-
-    def update(self):
-        if self.active:
-            self.x += 2
-            self.phase += (2*math.pi) / 100
-            self.y = self.base_y + 20*math.sin(self.phase)
-            self.rect.center = (self.x, self.y)
-            if self.x > 900 + self.image.get_width()/2:
-                self.x = -self.image.get_width()/2
-        else:
-            self.respawn_timer -= 1
-            if self.respawn_timer <= 0:
-                self.active = True
-                self.x = self.start_x
-                self.phase = random.uniform(0, 2*math.pi)
-
-    def draw(self):
-        assets.screen.blit(self.image, self.rect.topleft)
-
-    def hit(self):
-        self.active = False
-        self.respawn_timer = self.respawn_delay
 
 player1_grid = tools.generate_structure()
 player2_grid = tools.generate_structure()
@@ -48,6 +13,7 @@ current_player=1
 player1_score = 0
 player2_score = 0
 font = pygame.font.SysFont(None, 36)
+player1_name = player2_name = None
 
 current_bird_type = tools.get_next_bird(current_player)
 current_bird = classes.Bird(current_bird_type, current_player)
@@ -55,20 +21,33 @@ dragging = False
 trajectory=[]
 
 aliens = [
-    Alien(start_x=-50, base_y=100),
-    Alien(start_x=950, base_y=150)
+    classes.Alien(start_x=0, base_y=200),
+    classes.Alien(start_x=450, base_y=200)
 ]
 
 # Main loop
 clock = pygame.time.Clock()
 running = True
+started = False
 while running:
+    if not started:
+        running, started = tools.show_start_screen()
+        if not running: break
+    
+    if player1_name is None:
+        running, player1_name = tools.take_name_input()
+        if not running: break
+    if player2_name is None:
+        running, player2_name = tools.take_name_input()
+        if not running: break
+
     assets.screen.blit(assets.bgimg, (0, 0))
+    assets.screen.blit(assets.title, (280, 0))
     assets.screen.blit(assets.left_ss, (250, 420))
     assets.screen.blit(assets.right_ss, (586, 420))
 
-    p1_surf = font.render(f"P1 Score: {player1_score}", True, (255,255,255))
-    p2_surf = font.render(f"P2 Score: {player2_score}", True, (255,255,255))
+    p1_surf = font.render(f"{player1_name}: {player1_score}", True, (255,255,255))
+    p2_surf = font.render(f"{player2_name}: {player2_score}", True, (255,255,255))
     assets.screen.blit(p1_surf, (20, 20))
     assets.screen.blit(p2_surf, (900 - p2_surf.get_width() - 20, 20))
     
@@ -79,7 +58,7 @@ while running:
     current_bird.draw()
     for a in aliens:
         a.update()
-        a.draw()
+        if a.active: a.draw()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -130,27 +109,18 @@ while running:
         grid_x = 688 if current_bird.player == 1 else 20
         grid_y = 300
 
-        bird_rect = pygame.Rect(current_bird.x - 16, current_bird.y - 16, 32, 32)
-
-        hit = False
-        for i in range(4):
-            for j in range(4):
-                block = target_grid[i][j]
-                if block and block.health > 0:
-                    block_rect = pygame.Rect(grid_x + j*48, grid_y + i*48, 48, 48)
-                    if bird_rect.colliderect(block_rect):
-                        damage = tools.get_damage(current_bird.type, block.type)
-                        block.take_damage(damage)
-                        points = 10 * damage
-                        if current_bird.player == 1:
-                            player1_score += points
-                        else:
-                            player2_score += points
-                        hit = True
-                        break
-            if hit:
-                break
-        if hit:
+        score = tools.check_alien_collisions(current_bird, aliens)
+        if current_bird.player==1:
+            player1_score+=score
+        else: 
+            player2_score+=score
+       
+        score = tools.check_block_collisions(current_bird, target_grid, grid_x, grid_y)
+        if current_bird.player == 1:
+            player1_score += score
+        else:
+            player2_score += score
+        if score!=0:
             current_bird.step = len(current_bird.path)
 
         if current_bird.step >= len(current_bird.path):
