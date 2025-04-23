@@ -1,0 +1,83 @@
+import pygame
+import assets
+import classes
+
+def show_start_screen():
+    running = True
+    started = False
+    clock = pygame.time.Clock()
+
+    while not started and running:
+        assets.screen.blit(assets.start_screen, (0,0))
+        start_button=pygame.Rect(340, 490, 210, 60) # Creating a Rect at position of START button
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False, False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if start_button.collidepoint(pygame.mouse.get_pos()):
+                    return True, True
+
+        pygame.display.update()
+        clock.tick(60)
+    return False, False
+
+def show_main_menu():
+    running = True
+    clock = pygame.time.Clock()
+
+    quick = classes.Button(150, 150, 200, 60, "Quick")
+    basic = classes.Button(375, 150, 200, 60, "Basic")
+    pro = classes.Button(600, 150, 200, 60, "Pro")
+    quitb = classes.Button(350, 500, 200, 60, "Quit", normal_color=(238,75,43), hover_color=(150,0,0))
+
+    player1_box = classes.InputBox(300, 290, 300, 50)
+    player2_box = classes.InputBox(300, 400, 300, 50)
+    mode = None
+
+    while running and mode is None:
+        assets.screen.blit(assets.main_menu_bg, (0,0))
+
+        title = assets.title_font.render("Choose Game Mode!", True, (255,255,0))
+        assets.screen.blit(title, (450 - title.get_width()//2, 40))
+
+        settler1 = assets.textbox_font.render("Settler 1:", True, (255,255,255))
+        assets.screen.blit(settler1, (450 - settler1.get_width()//2, 250))
+        settler2 = assets.textbox_font.render("Settler 2:", True, (255,255,255))
+        assets.screen.blit(settler2, (450 - settler2.get_width()//2, 360))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                return None, None, None
+            
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if quick.is_clicked(event.pos): 
+                    mode = "quick"
+                if basic.is_clicked(event.pos): 
+                    mode = "basic"
+                if pro.is_clicked(event.pos): 
+                    mode = "pro"
+
+                if quitb.is_clicked(event.pos): 
+                    return None, None, None
+
+                if mode:
+                    n1, n2 = player1_box.text.strip(), player2_box.text.strip()
+                    if n1 == "" or n2 == "":
+                        mode = None
+                    else:
+                        return mode, n1, n2
+
+            player1_box.handle_event(event)
+            player2_box.handle_event(event)
+
+        quick.draw(assets.screen)
+        basic.draw(assets.screen)
+        pro.draw(assets.screen)
+        quitb.draw(assets.screen)
+        player1_box.draw(assets.screen)
+        player2_box.draw(assets.screen)
+
+        pygame.display.update()
+        clock.tick(60)

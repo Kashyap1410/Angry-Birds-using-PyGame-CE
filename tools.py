@@ -1,56 +1,9 @@
 import pygame
-import random
+import random, math
 import assets
 import classes
 
-def show_start_screen():
-    running = True
-    started = False
-    clock = pygame.time.Clock()
-    while not started and running:
-        assets.screen.blit(assets.start_screen, (0,0))
-        start_button=pygame.Rect(340, 490, 210, 60)
-        pygame.draw.rect(assets.screen, (255,0,0), start_button, 2)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return False, False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if start_button.collidepoint(pygame.mouse.get_pos()):
-                    print("pakad liya")
-                    return True, True
-        pygame.display.update()
-        clock.tick(60)
-    return False, False
-
-def take_name_input():
-    running = True
-    done = False
-    name = ""
-    clock = pygame.time.Clock()
-    font = pygame.font.Font(None, 36)
-
-    while not done:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    if name.strip():
-                        done = True
-                elif event.key == pygame.K_BACKSPACE:
-                    name = name[:-1]
-                else:
-                    name += event.unicode
-        
-        assets.screen.fill((0,0,0))
-        txt = font.render("Enter Name: " + name, True, (255, 255, 255))
-        assets.screen.blit(txt, (450-txt.get_width()//2, 300-txt.get_height()//2))
-
-        pygame.display.update()
-        clock.tick(60)
-    return running, name.strip()
-
-def generate_structure():
+def generate_structure(): # Create grid structure for both players
     block_types = ["ice"]*5 + ["stone"]*5 + ["wood"]*5 + [None]
     random.shuffle(block_types)
     
@@ -82,6 +35,7 @@ def get_damage(bird_type, block_type):
     }
     return damage_map[bird_type][block_type]
 
+# 12 birds per player, randomly generated
 player1_bird_queue = ["red", "chuck", "blue", "bomb"] * 3
 player2_bird_queue = ["red", "chuck", "blue", "bomb"] * 3
 random.shuffle(player1_bird_queue)
@@ -103,12 +57,32 @@ def draw_next_birds(player):
             bird_img = pygame.transform.flip(bird_img, True, False)
             assets.screen.blit(bird_img, (838 - i * 50, 550))
 
+def draw_trajectory(current_bird, current_player):
+    mx, my = pygame.mouse.get_pos()
+    start_x, start_y = (280, 430) if current_player == 1 else (636, 430)
+    dx = mx - start_x
+    dy = my - start_y
+    distance = math.hypot(dx, dy)
+    max_distance = 150
+    if distance > max_distance:
+        scale = max_distance / distance
+        dx *= scale
+        dy *= scale
+    vx = -dx * 0.2
+    vy = -dy * 0.2
+    trajectory = current_bird.simulate(vx, vy, steps=15)
+       
+    pygame.draw.line(assets.screen, (255, 255, 255), (start_x, start_y), (start_x+dx, start_y+dy), 2)
+    for i, point in enumerate(trajectory):
+        pygame.draw.circle(assets.screen, (255, 255, 255, max((255-30*i),0)), (int(point[0]), int(point[1])), (4-i//6))
+
 def check_alien_collisions(bird, aliens):
     bird_rect = pygame.Rect(bird.x - 16, bird.y - 16, 32, 32)
     for alien in aliens:
-        if alien.active and bird_rect.colliderect(alien.rect):
+        alien_rect = pygame.Rect(alien.x - 24, alien.y - 24, 48, 48)
+        if alien.active and bird_rect.colliderect(alien_rect):
             alien.hit()
-            return 5
+            return 5 # Score of 5 on hitting an alien
     return 0
 
 def check_block_collisions(bird, grid, grid_x, grid_y):
@@ -121,5 +95,5 @@ def check_block_collisions(bird, grid, grid_x, grid_y):
                 if bird_rect.colliderect(block_rect):
                     damage = get_damage(bird.type, block.type)
                     block.take_damage(damage)
-                    return damage * 10
+                    return damage * 10 # Return score
     return 0

@@ -4,7 +4,7 @@ pygame.display.set_caption("FeatherFall: Siege of Avaria!")
 
 import math
 import assets, tools
-import classes
+import classes, game
 
 player1_grid = tools.generate_structure()
 player2_grid = tools.generate_structure()
@@ -13,33 +13,30 @@ current_player=1
 player1_score = 0
 player2_score = 0
 font = pygame.font.SysFont(None, 36)
-player1_name = player2_name = None
 
 current_bird_type = tools.get_next_bird(current_player)
 current_bird = classes.Bird(current_bird_type, current_player)
 dragging = False
-trajectory=[]
 
 aliens = [
-    classes.Alien(start_x=0, base_y=200),
-    classes.Alien(start_x=450, base_y=200)
+    classes.Alien(start_x=0, base_y=180),
+    classes.Alien(start_x=300, base_y=200),
+    classes.Alien(start_x=600, base_y=220)
 ]
 
 # Main loop
 clock = pygame.time.Clock()
 running = True
 started = False
+mode = None
 while running:
     if not started:
-        running, started = tools.show_start_screen()
+        running, started = game.show_start_screen()
         if not running: break
     
-    if player1_name is None:
-        running, player1_name = tools.take_name_input()
-        if not running: break
-    if player2_name is None:
-        running, player2_name = tools.take_name_input()
-        if not running: break
+    if mode is None:
+        mode, player1_name, player2_name = game.show_main_menu()
+        if mode is None: break
 
     assets.screen.blit(assets.bgimg, (0, 0))
     assets.screen.blit(assets.title, (280, 0))
@@ -56,6 +53,7 @@ while running:
     tools.draw_next_birds(1)
     tools.draw_next_birds(2)
     current_bird.draw()
+
     for a in aliens:
         a.update()
         if a.active: a.draw()
@@ -87,20 +85,7 @@ while running:
             current_bird.step = 0
 
     if dragging:
-        mx, my = pygame.mouse.get_pos()
-        start_x, start_y = (280, 430) if current_player == 1 else (636, 430)
-        dx = mx - start_x
-        dy = my - start_y
-        power = min(math.hypot(dx, dy), 150) / 5
-        angle = (math.atan2(dy, dx) + math.pi) % (2 * math.pi)
-        vx = -dx * 0.2
-        vy = -dy * 0.2
-        trajectory = current_bird.simulate(vx, vy, steps=20)
-        pygame.draw.line(assets.screen, (255, 255, 255), (start_x, start_y), (mx, my), 2)
-
-    if dragging:
-        for i, point in enumerate(trajectory):
-            pygame.draw.circle(assets.screen, (255, 255, 255, max((255-15*i),0)), (int(point[0]), int(point[1])), (4-i//6))
+        tools.draw_trajectory(current_bird, current_player)
 
     if current_bird.launched:
         current_bird.update()
@@ -132,8 +117,6 @@ while running:
             else:
                 print("No birds left. Game over!")
                 running = False
-
-    current_bird.draw()
 
     pygame.display.update()
     clock.tick(60)

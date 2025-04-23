@@ -1,12 +1,19 @@
 import pygame
 
+# Loading fonts
+button_font = pygame.font.Font("media/Fragile Bombers.otf", 48)
+title_font = pygame.font.Font("media/Audiowide-Regular.ttf", 60)
+textbox_font = pygame.font.Font("media/Audiowide-Regular.ttf", 30)
+
+# Loading images
 screen=pygame.display.set_mode((900,600))
 start_screen=pygame.transform.scale(pygame.image.load("media/start_screen.png"), (900,600))
+main_menu_bg=pygame.transform.scale(pygame.image.load("media/main_menu.png"), (900,600))
 bgimg=pygame.transform.scale(pygame.image.load("media/background.png"), (900,600))
 title=pygame.transform.scale(pygame.image.load("media/title.png"), (341, 183))
 left_ss=pygame.transform.scale(pygame.image.load("media/leftslingshot.png"), (80,80))
 right_ss=pygame.transform.scale(pygame.image.load("media/rightslingshot.png"), (80,80))
-alien=pygame.transform.scale(pygame.image.load("media/alien.png"), (48,48))
+alien_bird=pygame.transform.scale(pygame.image.load("media/alien.png"), (48,48))
 
 block_images = {
     "ice": [pygame.transform.scale(pygame.image.load(f"media/ice_{i}.png"), (48, 48)) for i in range(4)],

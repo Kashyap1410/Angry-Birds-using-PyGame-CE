@@ -1,7 +1,6 @@
 import pygame
 import assets
-import math
-import random
+import math, random
 
 class Bird:
     def __init__(self, bird_type, player):
@@ -9,7 +8,7 @@ class Bird:
         self.player = player
         img = assets.bird_images[bird_type]
         self.image = img if player==1 else pygame.transform.flip(img, True, False)
-        self.reset()
+        self.reset() # Initialize remaining values
 
     def reset(self):
         if self.player == 1:
@@ -21,13 +20,14 @@ class Bird:
         self.launched = False
         self.step = 0
 
-    def simulate(self, vx, vy, steps=20):
+    # Create trajectory according to vx, vy
+    def simulate(self, vx, vy, steps):
         pts = []
         x, y = self.x, self.y
         for _ in range(steps):
             x += vx
             y += vy
-            vy += 1
+            vy += 1 # g=1
             if y > 600: break
             pts.append((x, y))
         return pts
@@ -36,6 +36,7 @@ class Bird:
         assets.screen.blit(self.image, (self.x - self.image.get_width()//2,
                                  self.y - self.image.get_height()//2))
 
+    # Update (x,y) along path
     def update(self):
         if self.launched and self.step < len(self.path):
             self.x, self.y = self.path[self.step]
@@ -62,34 +63,73 @@ class Block:
 
 class Alien:
     def __init__(self, start_x, base_y):
-        self.start_x = start_x
-        self.x = start_x
-        self.base_y = base_y
-        self.phase = random.uniform(0, 2*math.pi)
-        self.image = assets.alien
-        self.rect = self.image.get_rect(center=(self.x, self.base_y))
+        self.x = self.start_x = start_x
+        self.y = self.base_y = base_y
+        self.phase = random.uniform(0,2*math.pi)
+        self.image = assets.alien_bird
         self.active = True
         self.respawn_timer = 0
-        self.respawn_delay = 180
 
     def update(self):
-        if self.active:
+        if self.active: # Bobbing motion of alien bird
             self.x += 2
             self.phase += (2*math.pi) / 100
             self.y = self.base_y + 20*math.sin(self.phase)
-            self.rect.center = (self.x, self.y)
-            if self.x > 900 + self.image.get_width()/2:
-                self.x = -self.image.get_width()/2
+            if self.x + self.image.get_width() > 900:
+                self.x = 0
         else:
             self.respawn_timer -= 1
             if self.respawn_timer <= 0:
                 self.active = True
                 self.x = self.start_x
-                self.phase = random.uniform(0, 2*math.pi)
+                self.phase = random.uniform(0,2*math.pi)
 
     def draw(self):
-        assets.screen.blit(self.image, self.rect.topleft)
+        assets.screen.blit(self.image, (self.x, self.y))
 
     def hit(self):
         self.active = False
-        self.respawn_timer = self.respawn_delay
+        self.respawn_timer = 180 # Adding a respawn delay
+
+class Button:
+    def __init__(self, x, y, w, h, text, normal_color=(144,238,144), hover_color =(34,139,34)):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.text = text
+        self.normal_color = normal_color
+        self.hover_color = hover_color
+        self.text_color = (0,0,0)
+
+    def draw(self, screen):
+        color = self.hover_color if self.rect.collidepoint(pygame.mouse.get_pos()) else self.normal_color
+        pygame.draw.rect(screen, color, self.rect, border_radius=10)
+        text_surf = assets.button_font.render(self.text, True, self.text_color)
+        screen.blit(text_surf, (self.rect.centerx - text_surf.get_width()//2, self.rect.centery - text_surf.get_height()//2))
+
+    def is_clicked(self, pos):
+        return self.rect.collidepoint(pos)
+    
+class InputBox:
+    def __init__(self, x, y, w, h, text=''):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = (255, 255, 255)
+        self.text = text
+        self.active = False
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            self.active = self.rect.collidepoint(event.pos)
+        if event.type == pygame.KEYDOWN and self.active:
+            if event.key == pygame.K_RETURN:
+                self.active = False
+            elif event.key == pygame.K_BACKSPACE:
+                self.text = self.text[:-1]
+            else:
+                self.text += event.unicode
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, (46,103,248), self.rect)
+        border_w = 3 if self.active else 1
+        pygame.draw.rect(screen, (0,0,139), self.rect, border_w)
+
+        txt_surf = assets.textbox_font.render(self.text, True, (0,0,0))
+        screen.blit(txt_surf, (self.rect.x + 10, self.rect.y + (self.rect.height - txt_surf.get_height())//2))
