@@ -36,7 +36,7 @@ def show_main_menu():
     mode = None
 
     while running and mode is None:
-        assets.screen.blit(assets.main_menu_bg, (0,0))
+        assets.screen.blit(assets.bgimg, (0,0))
 
         title = assets.title_font.render("Choose Game Mode!", True, (255,255,0))
         assets.screen.blit(title, (450 - title.get_width()//2, 40))
@@ -81,3 +81,75 @@ def show_main_menu():
 
         pygame.display.update()
         clock.tick(60)
+
+def game_over_screen(winner, mode):
+    clock = pygame.time.Clock()
+    main_menu_button = classes.Button(350, 300, 200, 60, "Main Menu")
+    regame_button = classes.Button(350, 400, 200, 60, "Regame")
+    quit_button = classes.Button(350, 500, 200, 60, "Quit", normal_color=(238,75,43), hover_color=(150,0,0))
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False, None
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if main_menu_button.is_clicked(event.pos):
+                    return True, None
+                elif regame_button.is_clicked(event.pos):
+                    return True, mode
+                elif quit_button.is_clicked(event.pos):
+                    return False, None
+        
+        assets.screen.blit(assets.bgimg, (0,0))
+        text = assets.title_font.render(f"{winner} Wins!", True, (255, 255, 0))
+        assets.screen.blit(text, (450 - text.get_width()//2, 150))
+
+        main_menu_button.draw(assets.screen)
+        regame_button.draw(assets.screen)
+        quit_button.draw(assets.screen)
+
+        pygame.display.update()
+        clock.tick(60)
+
+def show_quick_info():
+    clock = pygame.time.Clock()
+    showing = True
+
+    while showing:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        pygame.display.update()
+        clock.tick(60)
+
+def show_info_screen(mode):
+    clock = pygame.time.Clock()
+    running = True
+    showing = True
+    
+    if mode == 'quick':
+        img = pygame.image.load("media/info_pro.png")
+    elif mode == 'basic':
+        img = pygame.image.load("media/info_basic.png")
+    elif mode == 'pro':
+        img = pygame.image.load("media/info_pro.png")
+    
+    while running and showing:
+        assets.screen.blit(assets.bgimg, (0,0))        
+        assets.screen.blit(img, (450-img.get_width()//2, 40))
+        start = classes.Button(350, 500, 200, 60, "Start")
+        start.draw(assets.screen)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if start.is_clicked(event.pos): 
+                    showing = False            
+        
+        pygame.display.update()
+        clock.tick(60)
+
+    return running

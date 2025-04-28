@@ -76,7 +76,7 @@ class Alien:
             self.phase += (2*math.pi) / 100
             self.y = self.base_y + 20*math.sin(self.phase)
             if self.x + self.image.get_width() > 900:
-                self.x = 0
+                self.x = -self.image.get_width()
         else:
             self.respawn_timer -= 1
             if self.respawn_timer <= 0:
@@ -133,3 +133,24 @@ class InputBox:
 
         txt_surf = assets.textbox_font.render(self.text, True, (0,0,0))
         screen.blit(txt_surf, (self.rect.x + 10, self.rect.y + (self.rect.height - txt_surf.get_height())//2))
+
+class Powerup:
+    def __init__(self, x, y, powerup_type):
+        self.x = x
+        self.y = y
+        self.type = powerup_type
+        self.active = True
+        if powerup_type == "full_path":
+            self.image = assets.full_path
+        elif powerup_type == "double_dmg":
+            self.image = assets.double_dmg
+        self.rect = pygame.Rect(x, y, self.image.get_width(), self.image.get_height())
+
+    def draw(self, screen):
+        if self.active: screen.blit(self.image, (self.x, self.y))
+
+    def is_clicked(self, pos):
+        return self.active and self.rect.collidepoint(pos)
+
+    def use(self):
+        self.active = False

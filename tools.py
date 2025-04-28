@@ -36,16 +36,23 @@ def get_damage(bird_type, block_type):
     return damage_map[bird_type][block_type]
 
 # 12 birds per player, randomly generated
-player1_bird_queue = ["red", "chuck", "blue", "bomb"] * 3
-player2_bird_queue = ["red", "chuck", "blue", "bomb"] * 3
+player1_bird_queue = ["red", "chuck", "blue", "bomb"]
+player2_bird_queue = ["red", "chuck", "blue", "bomb"]
 random.shuffle(player1_bird_queue)
 random.shuffle(player2_bird_queue)
 
 def get_next_bird(player):
+    global player1_bird_queue, player2_bird_queue
     if player == 1:
-        return player1_bird_queue.pop(0) if len(player1_bird_queue) > 0 else None
+        if len(player1_bird_queue) == 0:
+            player1_bird_queue += ["red", "chuck", "blue", "bomb"]
+            random.shuffle(player1_bird_queue)
+        return player1_bird_queue.pop(0)
     else:
-        return player2_bird_queue.pop(0) if len(player2_bird_queue) > 0 else None
+        if len(player2_bird_queue) == 0:
+            player2_bird_queue += ["red", "chuck", "blue", "bomb"]
+            random.shuffle(player2_bird_queue)
+        return player2_bird_queue.pop(0)
 
 def draw_next_birds(player):
     bird_queue = player1_bird_queue if player == 1 else player2_bird_queue
@@ -57,7 +64,7 @@ def draw_next_birds(player):
             bird_img = pygame.transform.flip(bird_img, True, False)
             assets.screen.blit(bird_img, (838 - i * 50, 550))
 
-def draw_trajectory(current_bird, current_player):
+def draw_trajectory(current_bird, current_player, full_trajectory_enabled=False):
     mx, my = pygame.mouse.get_pos()
     start_x, start_y = (280, 430) if current_player == 1 else (636, 430)
     dx = mx - start_x
@@ -70,7 +77,7 @@ def draw_trajectory(current_bird, current_player):
         dy *= scale
     vx = -dx * 0.2
     vy = -dy * 0.2
-    trajectory = current_bird.simulate(vx, vy, steps=15)
+    trajectory = current_bird.simulate(vx, vy, steps = 25 if full_trajectory_enabled else 8)
        
     pygame.draw.line(assets.screen, (255, 255, 255), (start_x, start_y), (start_x+dx, start_y+dy), 2)
     for i, point in enumerate(trajectory):
@@ -85,7 +92,7 @@ def check_alien_collisions(bird, aliens):
             return 5 # Score of 5 on hitting an alien
     return 0
 
-def check_block_collisions(bird, grid, grid_x, grid_y):
+def check_block_collisions(bird, grid, grid_x, grid_y, double_damage_enabled=False):
     bird_rect = pygame.Rect(bird.x - 16, bird.y - 16, 32, 32)
     for i in range(4):
         for j in range(4):
@@ -95,5 +102,16 @@ def check_block_collisions(bird, grid, grid_x, grid_y):
                 if bird_rect.colliderect(block_rect):
                     damage = get_damage(bird.type, block.type)
                     block.take_damage(damage)
+                    if double_damage_enabled: 
+                        block.take_damage(damage)
+                        damage*=2
                     return damage * 10 # Return score
     return 0
+
+def structure_demolished(grid):
+    for i in range(4):
+        for j in range(4):
+            if (grid[i][j] != None):
+                if (grid[i][j].health != 0):
+                    return False
+    return True
