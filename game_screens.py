@@ -26,9 +26,8 @@ def show_main_menu():
     running = True
     clock = pygame.time.Clock()
 
-    quick = classes.Button(150, 150, 200, 60, "Quick")
-    basic = classes.Button(375, 150, 200, 60, "Basic")
-    pro = classes.Button(600, 150, 200, 60, "Pro")
+    quick = classes.Button(240, 150, 200, 60, "Quick")
+    basic = classes.Button(460, 150, 200, 60, "Basic")
     quitb = classes.Button(350, 500, 200, 60, "Quit", normal_color=(238,75,43), hover_color=(150,0,0))
 
     player1_box = classes.InputBox(300, 290, 300, 50)
@@ -56,8 +55,6 @@ def show_main_menu():
                     mode = "quick"
                 if basic.is_clicked(event.pos): 
                     mode = "basic"
-                if pro.is_clicked(event.pos): 
-                    mode = "pro"
 
                 if quitb.is_clicked(event.pos): 
                     return None, None, None
@@ -74,7 +71,6 @@ def show_main_menu():
 
         quick.draw(assets.screen)
         basic.draw(assets.screen)
-        pro.draw(assets.screen)
         quitb.draw(assets.screen)
         player1_box.draw(assets.screen)
         player2_box.draw(assets.screen)
@@ -129,11 +125,9 @@ def show_info_screen(mode):
     showing = True
     
     if mode == 'quick':
-        img = pygame.image.load("media/info_pro.png")
+        img = pygame.image.load("media/info_quick.png")
     elif mode == 'basic':
         img = pygame.image.load("media/info_basic.png")
-    elif mode == 'pro':
-        img = pygame.image.load("media/info_pro.png")
     
     while running and showing:
         assets.screen.blit(assets.bgimg, (0,0))        

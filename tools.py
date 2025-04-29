@@ -125,6 +125,16 @@ def check_alien_collisions(bird, aliens):
             return 5 # Score of 5 on hitting an alien
     return 0
 
+def falling_blocks(grid):
+    for j in range(4):
+        for i in range(3, -1, -1):
+            if grid[i][j] is None and i > 0:
+                for k in range(i-1, -1, -1):
+                    if grid[k][j] is not None:
+                        grid[i][j] = grid[k][j]
+                        grid[k][j] = None
+                        break
+
 def check_block_collisions(bird, grid, grid_x, grid_y, double_damage_enabled=False):
     bird_rect = pygame.Rect(bird.x - 16, bird.y - 16, 32, 32)
     for i in range(4):
@@ -135,9 +145,13 @@ def check_block_collisions(bird, grid, grid_x, grid_y, double_damage_enabled=Fal
                 if bird_rect.colliderect(block_rect):
                     damage = get_damage(bird.type, block.type)
                     block.take_damage(damage)
+
                     if double_damage_enabled: 
                         block.take_damage(damage)
                         damage*=2
+                    
+                    if block.health==0: grid[i][j]=None
+                    falling_blocks(grid)
                     return damage * 10 # Return score
     return 0
 

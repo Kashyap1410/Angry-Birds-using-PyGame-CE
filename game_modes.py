@@ -33,6 +33,8 @@ def quick_game(player1_name, player2_name):
         
         tools.draw_structure(player1_grid, 20, 300)
         tools.draw_structure(player2_grid, 688, 300)
+        tools.falling_blocks(player1_grid)
+        tools.falling_blocks(player2_grid)
         tools.draw_next_birds(1)
         tools.draw_next_birds(2)
         current_bird.draw()
@@ -135,6 +137,8 @@ def basic_game(player1_name, player2_name):
         
         tools.draw_structure(player1_grid, 20, 300)
         tools.draw_structure(player2_grid, 688, 300)
+        tools.falling_blocks(player1_grid)
+        tools.falling_blocks(player2_grid)
         tools.draw_next_birds(1)
         tools.draw_next_birds(2)
         current_bird.draw()
