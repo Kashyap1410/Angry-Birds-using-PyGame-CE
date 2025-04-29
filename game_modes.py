@@ -1,8 +1,7 @@
 import pygame
 import assets, tools
 import classes
-import game
-import math
+import game_screens
 
 def quick_game(player1_name, player2_name):
     mode='quick'
@@ -27,17 +26,10 @@ def quick_game(player1_name, player2_name):
     running = True
     clock = pygame.time.Clock()
 
-    running = game.show_info_screen(mode)
+    running = game_screens.show_info_screen(mode)
     while running and not game_over:
-        assets.screen.blit(assets.game_bgimg, (0, 0))
-        assets.screen.blit(assets.title, (280, 0))
-        assets.screen.blit(assets.left_ss, (250, 420))
-        assets.screen.blit(assets.right_ss, (586, 420))
-
-        p1_surf = assets.textbox_font.render(f"{player1_name}: {player1_score}", True, (255,255,255))
-        p2_surf = assets.textbox_font.render(f"{player2_name}: {player2_score}", True, (255,255,255))
-        assets.screen.blit(p1_surf, (20, 20))
-        assets.screen.blit(p2_surf, (880 - p2_surf.get_width(), 20))
+        tools.draw_scene()
+        tools.draw_scores(assets.screen, player1_name, player1_score, player2_name, player2_score)
         
         tools.draw_structure(player1_grid, 20, 300)
         tools.draw_structure(player2_grid, 688, 300)
@@ -60,20 +52,7 @@ def quick_game(player1_name, player2_name):
 
             elif event.type == pygame.MOUSEBUTTONUP and dragging:
                 dragging = False
-                mx,my = pygame.mouse.get_pos()
-                dx, dy = mx - current_bird.x, my - current_bird.y
-                distance = math.hypot(dx, dy)
-                max_distance = 150
-                if distance > max_distance:
-                    scale = max_distance / distance
-                    dx *= scale
-                    dy *= scale
-                vx_launch = -dx * 0.2
-                vy_launch = -dy * 0.2
-                current_bird.path = current_bird.simulate(vx_launch, vy_launch, steps=200)
-                current_bird.vx, current_bird.vy = vx_launch, vy_launch
-                current_bird.launched = True
-                current_bird.step = 0
+                tools.handle_bird_launch(current_bird)
 
         if dragging:
             tools.draw_trajectory(current_bird, current_player)
@@ -106,7 +85,7 @@ def quick_game(player1_name, player2_name):
         
         if player1_score >= 200 or player2_score >= 200:
             winner = player1_name if player1_score > player2_score else player2_name
-            running, mode = game.game_over_screen(winner, 'quick')
+            running, mode = game_screens.game_over_screen(winner, 'quick')
             game_over = True
 
         pygame.display.update()
@@ -142,17 +121,10 @@ def basic_game(player1_name, player2_name):
     double_damage_enabled = False
     clock = pygame.time.Clock()
 
-    running = game.show_info_screen(mode)
+    running = game_screens.show_info_screen(mode)
     while running and not game_over:
-        assets.screen.blit(assets.game_bgimg, (0, 0))
-        assets.screen.blit(assets.title, (280, 0))
-        assets.screen.blit(assets.left_ss, (250, 420))
-        assets.screen.blit(assets.right_ss, (586, 420))
-
-        p1_surf = assets.textbox_font.render(f"{player1_name}: {player1_score}", True, (255,255,255))
-        p2_surf = assets.textbox_font.render(f"{player2_name}: {player2_score}", True, (255,255,255))
-        assets.screen.blit(p1_surf, (20, 20))
-        assets.screen.blit(p2_surf, (880 - p2_surf.get_width(), 20))
+        tools.draw_scene()
+        tools.draw_scores(assets.screen, player1_name, player1_score, player2_name, player2_score)
 
         if current_player == 1:
             for p in player1_powerups:
@@ -199,20 +171,7 @@ def basic_game(player1_name, player2_name):
 
             elif event.type == pygame.MOUSEBUTTONUP and dragging:
                 dragging = False
-                mx,my = pygame.mouse.get_pos()
-                dx, dy = mx - current_bird.x, my - current_bird.y
-                distance = math.hypot(dx, dy)
-                max_distance = 150
-                if distance > max_distance:
-                    scale = max_distance / distance
-                    dx *= scale
-                    dy *= scale
-                vx_launch = -dx * 0.2
-                vy_launch = -dy * 0.2
-                current_bird.path = current_bird.simulate(vx_launch, vy_launch, steps=200)
-                current_bird.vx, current_bird.vy = vx_launch, vy_launch
-                current_bird.launched = True
-                current_bird.step = 0
+                tools.handle_bird_launch(current_bird)
 
         if dragging:
             tools.draw_trajectory(current_bird, current_player, full_trajectory_enabled)
@@ -246,10 +205,10 @@ def basic_game(player1_name, player2_name):
                 double_damage_enabled = False
         
         if tools.structure_demolished(player1_grid):
-            running, mode = game.game_over_screen(player1_name, 'basic')
+            running, mode = game_screens.game_over_screen(player1_name, 'basic')
             game_over = True
         if tools.structure_demolished(player2_grid):
-            running, mode = game.game_over_screen(player2_name, 'basic')
+            running, mode = game_screens.game_over_screen(player2_name, 'basic')
             game_over = True
 
         pygame.display.update()
